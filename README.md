@@ -13,6 +13,4 @@ Mở trình duyệt tại http://127.0.0.1:5000
 
 ## Công nghệ
 
-- Python 3 + Flask
-- SQLite (file `meeting.db`, tự khởi tạo khi chạy lần đầu)
-- Bootstrap 5 (CDN) + JavaScript thuần (fetch API cho lọc phòng trống động)
+Xây dựng bằng Python (Flask) + SQLite, giao diện HTML/CSS/JavaScript kết hợp Bootstrap 5.
