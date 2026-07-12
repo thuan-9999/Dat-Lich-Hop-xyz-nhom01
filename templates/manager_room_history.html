@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Lịch sử sử dụng phòng{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">Lịch sử sử dụng – {{ room['name'] }}</h4>
+  <a href="{{ url_for('manager_rooms') }}" class="btn btn-outline-secondary btn-sm">← Quay lại</a>
+</div>
+<div class="card p-3 mb-3">
+  <div class="text-muted small">Sức chứa: {{ room['capacity'] }} người &nbsp;|&nbsp; Thiết bị: {{ room['equipment'] }}</div>
+</div>
+
+<table class="table bg-white">
+  <thead>
+    <tr>
+      <th>Tiêu đề cuộc họp</th>
+      <th>Người tạo</th>
+      <th>Thời gian</th>
+      <th>Trạng thái</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for m in bookings %}
+    <tr>
+      <td class="{{ 'meeting-cancelled' if m['status'] != 'active' else '' }}">{{ m['title'] }}</td>
+      <td>{{ m['creator_name'] }}</td>
+      <td>{{ m['start_time'] }} → {{ m['end_time'] }}</td>
+      <td>
+        {% if m['status'] != 'active' %}
+          <span class="badge badge-cancelled">Đã hủy</span>
+        {% elif m['end_time'] < now_str %}
+          <span class="badge badge-past">Đã diễn ra</span>
+        {% elif m['start_time'] <= now_str and m['end_time'] > now_str %}
+          <span class="badge badge-cancelled">Đang diễn ra</span>
+        {% else %}
+          <span class="badge badge-active">Sắp diễn ra</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="4" class="text-muted text-center">Phòng này chưa từng được đặt lịch.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

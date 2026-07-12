@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Đăng nhập - MeetingHub</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  body { background: linear-gradient(135deg,#14304d,#2E75B6); min-height:100vh; display:flex; align-items:center; font-family:"Segoe UI",Arial,sans-serif; }
+  .card { max-width: 400px; margin: auto; border:none; box-shadow: 0 4px 20px rgba(0,0,0,.2); border-radius: 12px; }
+  .btn-primary { background-color:#2E75B6; border-color:#2E75B6; }
+  .btn-primary:hover { background-color:#245f94; border-color:#245f94; }
+</style>
+</head>
+<body>
+<div class="card p-4 w-100">
+  <h4 class="text-center mb-1">🗓️MeetingHub Công ty XYZ</h4>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} py-2 small" role="alert">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <form method="post">
+    <div class="mb-3">
+      <label class="form-label">Email</label>
+      <input type="email" name="email" class="form-control" placeholder="ten@xyz.com"
+             value="{{ email }}" required autofocus>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Mật khẩu</label>
+      <input type="password" name="password" class="form-control" placeholder="Nhập mật khẩu" required>
+    </div>
+    <button type="submit" class="btn btn-primary w-100">Đăng nhập</button>
+  </form>
+</div>
+</body>
+</html>

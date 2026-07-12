@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Sửa phòng họp' if mode == 'edit' else 'Thêm phòng họp' }}{% endblock %}
+{% block content %}
+<div class="card p-4" style="max-width:560px;margin:auto;">
+  <h4 class="mb-3">{{ 'Sửa phòng họp' if mode == 'edit' else 'Thêm phòng họp mới' }}</h4>
+  <form method="post">
+    <div class="mb-3">
+      <label class="form-label">Tên phòng <span class="text-danger">*</span></label>
+      <input type="text" name="name" class="form-control" value="{{ form.get('name','') }}" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Sức chứa (số người) <span class="text-danger">*</span></label>
+      <input type="number" name="capacity" min="1" class="form-control" value="{{ form.get('capacity','') }}" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Thiết bị</label>
+      <input type="text" name="equipment" class="form-control" placeholder="VD: Máy chiếu, Camera, Micro"
+             value="{{ form.get('equipment','') }}">
+    </div>
+    {% if mode == 'edit' %}
+    <div class="mb-3">
+      <label class="form-label">Trạng thái</label>
+      <select name="status" class="form-select">
+        <option value="active" {% if form.get('status')=='active' %}selected{% endif %}>Đang hoạt động</option>
+        <option value="maintenance" {% if form.get('status')=='maintenance' %}selected{% endif %}>Bảo trì</option>
+      </select>
+    </div>
+    {% endif %}
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary">{{ 'Lưu thay đổi' if mode == 'edit' else 'Thêm phòng' }}</button>
+      <a href="{{ url_for('manager_rooms') }}" class="btn btn-secondary">Hủy bỏ</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

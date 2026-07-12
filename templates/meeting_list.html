@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Quản lý cuộc họp{% endblock %}
+{% block content %}
+<h4 class="mb-3">Cuộc họp do tôi tạo</h4>
+<div class="row g-3 mb-5">
+  {% for m in created %}
+  <div class="col-md-6">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <div class="meeting-title {% if m['status'] != 'active' %}meeting-cancelled{% elif m['end_time'] < now_str %}meeting-past{% endif %}">{{ m['title'] }}</div>
+          <div class="text-muted small">🏠 {{ m['room_name'] }} &nbsp;|&nbsp; 🕒 {{ m['start_time'] }} → {{ m['end_time'] }}</div>
+        </div>
+        {% if m['status'] != 'active' %}
+          <span class="badge badge-cancelled">Đã hủy</span>
+        {% elif m['end_time'] < now_str %}
+          <span class="badge badge-past">Đã diễn ra</span>
+        {% else %}
+          <span class="badge badge-active">Đang hoạt động</span>
+        {% endif %}
+      </div>
+      {% if m['description'] %}<p class="mt-2 mb-2 small">{{ m['description'] }}</p>{% endif %}
+      {% if m['status'] == 'active' %}
+      <div class="d-flex gap-2 mt-2">
+        <a href="{{ url_for('meeting_edit', meeting_id=m['id']) }}" class="btn btn-sm btn-outline-primary">Sửa</a>
+        <form method="post" action="{{ url_for('meeting_cancel', meeting_id=m['id']) }}"
+              onsubmit="return confirm('Bạn có chắc muốn hủy cuộc họp này?');">
+          <button type="submit" class="btn btn-sm btn-outline-danger">Hủy</button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% else %}
+  <p class="text-muted">Bạn chưa tạo cuộc họp nào.</p>
+  {% endfor %}
+</div>
+
+<h4 class="mb-3">Cuộc họp tôi được mời</h4>
+<div class="row g-3">
+  {% for m in invited %}
+  <div class="col-md-6">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <div class="meeting-title {% if m['status'] != 'active' %}meeting-cancelled{% elif m['end_time'] < now_str %}meeting-past{% endif %}">{{ m['title'] }}</div>
+          <div class="text-muted small">👤 {{ m['creator_name'] }} &nbsp;|&nbsp; 🏠 {{ m['room_name'] }}</div>
+          <div class="text-muted small">🕒 {{ m['start_time'] }} → {{ m['end_time'] }}</div>
+        </div>
+        {% if m['status'] != 'active' %}
+          <span class="badge badge-cancelled">Đã hủy</span>
+        {% elif m['end_time'] < now_str %}
+          <span class="badge badge-past">Đã diễn ra</span>
+        {% else %}
+          <span class="badge badge-active">Đang hoạt động</span>
+        {% endif %}
+      </div>
+      <div class="mt-2">
+        Trạng thái phản hồi:
+        {% if m['response'] == 'accepted' %}<span class="badge badge-accepted">Đã đồng ý</span>
+        {% elif m['response'] == 'declined' %}<span class="badge badge-declined">Đã từ chối</span>
+        {% else %}<span class="badge badge-pending">Chưa phản hồi</span>{% endif %}
+      </div>
+      {% if m['status'] == 'active' %}
+      <div class="d-flex gap-2 mt-2">
+        <form method="post" action="{{ url_for('meeting_respond', meeting_id=m['id']) }}">
+          <input type="hidden" name="response" value="accepted">
+          <button type="submit" class="btn btn-sm btn-success">Đồng ý</button>
+        </form>
+        <form method="post" action="{{ url_for('meeting_respond', meeting_id=m['id']) }}">
+          <input type="hidden" name="response" value="declined">
+          <button type="submit" class="btn btn-sm btn-outline-danger">Từ chối</button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% else %}
+  <p class="text-muted">Bạn chưa được mời cuộc họp nào.</p>
+  {% endfor %}
+</div>
+{% endblock %}

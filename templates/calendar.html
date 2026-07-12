@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Lịch họp cá nhân{% endblock %}
+{% block content %}
+<style>
+  .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .cal-toolbar { display: flex; gap: 8px; align-items: center; }
+  .view-toggle .btn { min-width: 64px; }
+  .cal-nav-btn { background: #fff; border: 1px solid #dfe3e8; border-radius: 6px; width: 30px; height: 30px;
+                 display: inline-flex; align-items: center; justify-content: center; color: #4a5568; text-decoration: none; }
+  .cal-nav-btn:hover { background: #eaf3fb; color: var(--brand); }
+  .cal-range-label { font-weight: 600; color: #2d3748; min-width: 210px; text-align: center; }
+
+  .week-grid { display: grid; grid-template-columns: 56px repeat({{ days|length }}, 1fr); border: 1px solid #e6e9ee; background: #fff; border-radius: 8px; overflow: hidden; }
+  .week-grid .day-head { padding: 8px 4px; text-align: center; border-left: 1px solid #eef1f4; border-bottom: 1px solid #e6e9ee; background: #fafbfc; }
+  .week-grid .day-head.today .date-badge { background: var(--brand); color: #fff; border-radius: 50%; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; }
+  .week-grid .day-head .dow { font-size: .72rem; color: #8a94a3; text-transform: uppercase; }
+  .week-grid .day-head .date-num { font-weight: 600; color: #2d3748; margin-top: 2px; }
+  .corner-cell { border-bottom: 1px solid #e6e9ee; }
+
+  .hour-col { border-left: none; }
+  .hour-label { font-size: .72rem; color: #8a94a3; text-align: right; padding-right: 8px; transform: translateY(-6px); }
+
+  .day-col { position: relative; border-left: 1px solid #eef1f4; background-image: repeating-linear-gradient(to bottom, #f1f3f6 0, #f1f3f6 1px, transparent 1px, transparent {{ row_height }}px); }
+
+  .event-block { position: absolute; left: 3px; right: 3px; border-radius: 6px; padding: 3px 6px; font-size: .74rem;
+                 overflow: hidden; border-left: 3px solid; cursor: pointer; text-decoration: none; display: block; }
+  .event-block .ev-title { font-weight: 600; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .event-block .ev-room { display: block; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; }
+
+  /* Month view */
+  .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); border: 1px solid #e6e9ee; background: #fff; border-radius: 8px; overflow: hidden; }
+  .month-cell { min-height: 96px; border-left: 1px solid #eef1f4; border-bottom: 1px solid #e6e9ee; padding: 6px; }
+  .month-cell.other-month { background: #fafbfc; color: #c3c9d1; }
+  .month-cell .date-num { font-weight: 600; font-size: .85rem; }
+  .month-cell .date-num.today { background: var(--brand); color: #fff; border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: .78rem; }
+  .month-event { font-size: .68rem; padding: 1px 5px; border-radius: 4px; margin-top: 2px; border-left: 3px solid; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+</style>
+
+<div class="cal-header">
+  <h4 class="mb-0">Lịch họp cá nhân</h4>
+  <a href="{{ url_for('meeting_new') }}" class="btn btn-primary btn-sm">+ Tạo lịch họp mới</a>
+</div>
+
+<div class="cal-toolbar mb-3">
+  <div class="btn-group view-toggle" role="group">
+    <a class="btn btn-sm {{ 'btn-primary' if view=='day' else 'btn-outline-secondary' }}"
+       href="{{ url_for('calendar_view', view='day', date=ref_date.isoformat()) }}">Ngày</a>
+    <a class="btn btn-sm {{ 'btn-primary' if view=='week' else 'btn-outline-secondary' }}"
+       href="{{ url_for('calendar_view', view='week', date=ref_date.isoformat()) }}">Tuần</a>
+    <a class="btn btn-sm {{ 'btn-primary' if view=='month' else 'btn-outline-secondary' }}"
+       href="{{ url_for('calendar_view', view='month', date=ref_date.isoformat()) }}">Tháng</a>
+  </div>
+  <a class="cal-nav-btn" href="{{ url_for('calendar_view', view=view, date=prev_date.isoformat()) }}">‹</a>
+  <div class="cal-range-label">{{ title }}</div>
+  <a class="cal-nav-btn" href="{{ url_for('calendar_view', view=view, date=next_date.isoformat()) }}">›</a>
+  <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('calendar_view', view=view) }}">Hôm nay</a>
+  <span class="ms-3 small text-muted"><span class="legend-dot" style="background:#2E75B6"></span>Tôi tạo</span>
+  <span class="small text-muted"><span class="legend-dot" style="background:#e08a2e"></span>Được mời</span>
+  <span class="small text-muted"><span class="legend-dot" style="background:#AAAAAA"></span>Đã hủy</span>
+</div>
+
+{% if view == 'month' %}
+  <div class="month-grid">
+    {% for dow in ['T2','T3','T4','T5','T6','T7','CN'] %}
+      <div class="day-head">{{ dow }}</div>
+    {% endfor %}
+    {% for d in days %}
+      <div class="month-cell {{ 'other-month' if d.month != current_month else '' }}">
+        <div class="date-num {{ 'today' if d == today else '' }}">{{ d.day }}</div>
+        {% for ev in events_by_day[d.isoformat()][:3] %}
+          <a href="{{ url_for('meeting_list') }}" class="month-event d-block text-decoration-none"
+             style="background:{{ ev.colors.bg }}; border-color:{{ ev.colors.border }}; color:{{ ev.colors.text }};">
+            {{ ev.title }}
+          </a>
+        {% endfor %}
+        {% if events_by_day[d.isoformat()]|length > 3 %}
+          <div class="small text-muted">+{{ events_by_day[d.isoformat()]|length - 3 }} khác</div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+
+{% else %}
+  <div class="week-grid" style="grid-template-rows: 44px repeat({{ hours|length }}, {{ row_height }}px);">
+    <div class="corner-cell"></div>
+    {% for d in days %}
+      <div class="day-head {{ 'today' if d == today else '' }}">
+        <div class="dow">{{ ['Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7','Chủ nhật'][d.weekday()] if view=='day' else ['T2','T3','T4','T5','T6','T7','CN'][d.weekday()] }}</div>
+        <div class="date-num"><span class="date-badge">{{ d.day }}</span></div>
+      </div>
+    {% endfor %}
+
+    {% for h in hours %}
+      <div class="hour-col hour-label">{{ '%02d:00'|format(h) }}</div>
+      {% for d in days %}
+        <div class="day-col" style="grid-row: span 1;">
+          {% if loop.first is defined %}{% endif %}
+        </div>
+      {% endfor %}
+    {% endfor %}
+  </div>
+
+  <!-- Lớp phủ sự kiện (absolute-positioned theo top/height tính từ server) -->
+  <div style="position:relative; margin-top:-{{ hours|length * row_height }}px; margin-left:56px; pointer-events:none;">
+    <div style="display:grid; grid-template-columns: repeat({{ days|length }}, 1fr); height: {{ hours|length * row_height }}px;">
+      {% for d in days %}
+        <div style="position:relative; pointer-events:auto;">
+          {% for ev in events_by_day[d.isoformat()] %}
+            <a href="{{ url_for('meeting_list') }}" class="event-block"
+               style="top:{{ ev.top }}px; height:{{ ev.height }}px;
+                      background:{{ ev.colors.bg }}; border-color:{{ ev.colors.border }}; color:{{ ev.colors.text }};">
+              <span class="ev-title">{{ ev.title }}</span>
+              <span class="ev-room">{{ ev.room_name }} · {{ ev.start_time }}–{{ ev.end_time }}</span>
+            </a>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

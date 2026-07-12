@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Tạo tài khoản{% endblock %}
+{% block content %}
+<div class="card p-4" style="max-width:560px;margin:auto;">
+  <h4 class="mb-3">Tạo tài khoản người dùng</h4>
+  <form method="post">
+    <div class="mb-3">
+      <label class="form-label">Họ và tên <span class="text-danger">*</span></label>
+      <input type="text" name="name" class="form-control" value="{{ form.get('name','') }}" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Email <span class="text-danger">*</span></label>
+      <input type="email" name="email" class="form-control" value="{{ form.get('email','') }}" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Mật khẩu <span class="text-danger">*</span></label>
+      <input type="password" name="password" class="form-control" minlength="6" required>
+      <div class="form-text">Tối thiểu 6 ký tự.</div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Vai trò</label>
+      <select name="role" class="form-select">
+        <option value="employee" selected>Nhân viên</option>
+        <option value="manager">Meeting Manager</option>
+        <option value="admin">Administrator</option>
+      </select>
+    </div>
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary">Tạo tài khoản</button>
+      <a href="{{ url_for('admin_accounts') }}" class="btn btn-secondary">Hủy bỏ</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

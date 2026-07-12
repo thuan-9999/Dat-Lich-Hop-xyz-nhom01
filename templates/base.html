@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}MeetingHub{% endblock %} – Công ty XYZ</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root { --brand: #2E75B6; --navy: #14304d; }
+  * { box-sizing: border-box; }
+  body { background: #f4f6f9; font-family: "Segoe UI", Arial, sans-serif; margin: 0; }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    background: var(--navy); color: #fff; height: 52px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px; position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  }
+  .topbar .brand { font-weight: 700; font-size: 1.05rem; }
+  .topbar .brand .sep { opacity: .5; font-weight: 400; margin: 0 6px; }
+  .topbar .user-badge {
+    background: rgba(255,255,255,.12); border-radius: 20px; padding: 5px 14px;
+    font-size: .85rem; display: flex; align-items: center; gap: 8px; cursor: pointer;
+    border: none; color: #fff; text-decoration: none;
+  }
+  .topbar .user-badge:hover { background: rgba(255,255,255,.2); color: #fff; }
+
+  /* ---------- Sidebar ---------- */
+  .app-shell { display: flex; padding-top: 52px; min-height: 100vh; }
+  .sidebar {
+    width: 190px; background: #fff; border-right: 1px solid #e6e9ee;
+    position: fixed; top: 52px; bottom: 0; left: 0; padding: 14px 0; overflow-y: auto;
+  }
+  .sidebar a {
+    display: block; padding: 10px 20px; color: #4a5568; text-decoration: none;
+    font-size: .92rem; border-left: 3px solid transparent;
+  }
+  .sidebar a:hover { background: #f4f8fc; color: var(--brand); }
+  .sidebar a.active {
+    color: var(--brand); font-weight: 600; background: #eaf3fb; border-left-color: var(--brand);
+  }
+  .sidebar-section-label { padding: 14px 20px 4px; font-size: .7rem; text-transform: uppercase; color: #a0aab5; letter-spacing: .04em; }
+  .main-content { margin-left: 190px; flex: 1; padding: 24px 28px; width: calc(100% - 190px); }
+
+  .btn-primary { background-color: var(--brand); border-color: var(--brand); }
+  .btn-primary:hover { background-color: #245f94; border-color: #245f94; }
+  .badge-active { background-color: var(--brand); }
+  .badge-cancelled { background-color: #c0392b; }
+  .badge-past { background-color: #AAAAAA; }
+  .badge-accepted { background-color: #2e8b57; }
+  .badge-declined { background-color: #c0392b; }
+  .badge-pending { background-color: #e0a800; }
+  .card { border: none; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  .meeting-title { color: var(--brand); font-weight: 600; }
+  .meeting-cancelled { color: #c0392b; text-decoration: line-through; font-weight: 600; }
+  .meeting-past { color: #AAAAAA; font-weight: 600; }
+
+  /* Participant tag input (UI-2: Search/Tags Input) */
+  .tag-input-wrap { position: relative; }
+  .tag-list { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; border: 1px solid #ced4da; border-radius: .375rem; min-height: 46px; background: #fff; }
+  .tag-chip { display: inline-flex; align-items: center; gap: 6px; background: #e7f1fb; color: var(--brand); border: 1px solid #bcd9f5; border-radius: 20px; padding: 3px 10px; font-size: .85rem; }
+  .tag-chip.busy { background: #fff3cd; color: #7a5b00; border-color: #ffe08a; }
+  .tag-chip .remove { cursor: pointer; font-weight: bold; }
+  .tag-search-input { border: none; outline: none; flex: 1; min-width: 160px; }
+  .tag-suggestions { position: absolute; z-index: 20; background: #fff; border: 1px solid #ced4da; border-radius: .375rem; width: 100%; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 10px rgba(0,0,0,.08); display: none; }
+  .tag-suggestion-item { padding: 8px 12px; cursor: pointer; }
+  .tag-suggestion-item:hover, .tag-suggestion-item.active { background: #f0f6fc; }
+  .char-counter { font-size: .8rem; color: #888; text-align: right; }
+  .char-counter.limit-near { color: #c0392b; }
+</style>
+</head>
+<body>
+{% if not session.get('user_id') %}
+  <p>Vui lòng <a href="{{ url_for('login') }}">đăng nhập</a>.</p>
+{% else %}
+<div class="topbar">
+  <div class="brand">MeetingHub <span class="sep">-</span> Công ty XYZ</div>
+  <a href="{{ url_for('account_view') }}" class="user-badge">👤 {{ user['name'] }}</a>
+</div>
+<div class="app-shell">
+  <div class="sidebar">
+    <a href="{{ url_for('calendar_view') }}" class="{{ 'active' if request.endpoint == 'calendar_view' else '' }}">🗓️ Lịch họp cá nhân</a>
+    <a href="{{ url_for('meeting_new') }}" class="{{ 'active' if request.endpoint == 'meeting_new' else '' }}">➕ Tạo lịch họp mới</a>
+    <a href="{{ url_for('meeting_list') }}" class="{{ 'active' if request.endpoint in ('meeting_list','meeting_edit') else '' }}">📋 Cuộc họp của tôi</a>
+    <a href="{{ url_for('notifications_view') }}" class="{{ 'active' if request.endpoint == 'notifications_view' else '' }}">
+      🔔 Thông báo
+      {% if unread_notif_count %}<span class="badge bg-danger rounded-pill ms-1">{{ unread_notif_count }}</span>{% endif %}
+    </a>
+    {% if user['role'] in ('manager', 'admin') %}
+    <a href="{{ url_for('manager_rooms') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('manager_room') else '' }}">🏠 Quản lý phòng họp</a>
+    {% else %}
+    <a href="{{ url_for('rooms_view') }}" class="{{ 'active' if request.endpoint == 'rooms_view' else '' }}">🏠 Phòng họp</a>
+    {% endif %}
+    {% if user['role'] == 'admin' %}
+    <div class="sidebar-section-label">Quản trị hệ thống</div>
+    <a href="{{ url_for('admin_dashboard') }}" class="{{ 'active' if request.endpoint == 'admin_dashboard' else '' }}">📊 Dashboard thống kê</a>
+    <a href="{{ url_for('admin_accounts') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('admin_account') else '' }}">🛡️ Quản lý tài khoản</a>
+    {% endif %}
+    <a href="{{ url_for('account_view') }}" class="{{ 'active' if request.endpoint == 'account_view' else '' }}">👤 Tài khoản</a>
+  </div>
+  <div class="main-content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </div>
+</div>
+{% endif %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

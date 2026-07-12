@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Tài khoản{% endblock %}
+{% block content %}
+<h4 class="mb-3">Tài khoản Người Dùng</h4>
+<div class="card p-4" style="max-width:480px;">
+  <div class="mb-3">
+    <div class="text-muted small">Họ và tên</div>
+    <div class="fw-semibold">{{ user['name'] }}</div>
+  </div>
+  <div class="mb-3">
+    <div class="text-muted small">Email</div>
+    <div class="fw-semibold">{{ user['email'] }}</div>
+  </div>
+  <div class="mb-3">
+    <div class="text-muted small">Vai trò</div>
+    <div class="fw-semibold">
+      {% if user['role'] == 'admin' %}Administrator
+      {% elif user['role'] == 'manager' %}Meeting Manager
+      {% else %}Nhân viên{% endif %}
+    </div>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="{{ url_for('account_update') }}" class="btn btn-primary btn-sm">Cập nhật thông tin</a>
+    <a href="{{ url_for('account_change_password') }}" class="btn btn-outline-primary btn-sm">Đổi mật khẩu</a>
+    <a href="{{ url_for('logout') }}" class="btn btn-outline-secondary btn-sm">Đăng xuất</a>
+  </div>
+</div>
+{% endblock %}

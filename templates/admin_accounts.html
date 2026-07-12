@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Quản lý tài khoản{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">Quản lý tài khoản người dùng</h4>
+  <a href="{{ url_for('admin_account_new') }}" class="btn btn-primary btn-sm">+ Tạo tài khoản</a>
+</div>
+
+<table class="table bg-white align-middle">
+  <thead>
+    <tr>
+      <th>Họ và tên</th>
+      <th>Email</th>
+      <th>Vai trò</th>
+      <th>Trạng thái</th>
+      <th>Hành động</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for a in accounts %}
+    <tr>
+      <td>{{ a['name'] }}{% if a['id'] == user['id'] %} <span class="badge bg-secondary">Bạn</span>{% endif %}</td>
+      <td>{{ a['email'] }}</td>
+      <td>
+        <form method="post" action="{{ url_for('admin_account_role', emp_id=a['id']) }}" class="d-flex gap-1">
+          <select name="role" class="form-select form-select-sm" style="width:130px" onchange="this.form.submit()">
+            <option value="employee" {% if a['role']=='employee' %}selected{% endif %}>Nhân viên</option>
+            <option value="manager" {% if a['role']=='manager' %}selected{% endif %}>Meeting Manager</option>
+            <option value="admin" {% if a['role']=='admin' %}selected{% endif %}>Administrator</option>
+          </select>
+        </form>
+      </td>
+      <td>
+        {% if a['is_locked'] %}
+          <span class="badge badge-cancelled">Đã khóa</span>
+        {% else %}
+          <span class="badge badge-active">Hoạt động</span>
+        {% endif %}
+      </td>
+      <td>
+        {% if a['id'] != user['id'] %}
+        <form method="post" action="{{ url_for('admin_account_toggle_lock', emp_id=a['id']) }}">
+          {% if a['is_locked'] %}
+            <button type="submit" class="btn btn-sm btn-outline-success">Mở khóa</button>
+          {% else %}
+            <button type="submit" class="btn btn-sm btn-outline-danger">Khóa</button>
+          {% endif %}
+        </form>
+        {% else %}
+          <span class="text-muted small">—</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

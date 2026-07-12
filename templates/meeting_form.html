@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Sửa cuộc họp' if mode == 'edit' else 'Tạo lịch họp mới' }}{% endblock %}
+{% block content %}
+<div class="card p-4" style="max-width:700px;margin:auto;">
+  <h4 class="mb-3">{{ 'Sửa cuộc họp' if mode == 'edit' else 'Tạo lịch họp mới' }}</h4>
+  <form method="post" id="meetingForm">
+    <div class="mb-1">
+      <label class="form-label">Tiêu đề cuộc họp <span class="text-danger">*</span></label>
+      <input type="text" id="titleInput" name="title" maxlength="200" class="form-control"
+             value="{{ form.get('title','') }}" required>
+    </div>
+    <div class="char-counter mb-3" id="titleCounter">0 / 200 ký tự</div>
+
+    <div class="mb-3">
+      <label class="form-label">Phòng họp <span class="text-danger">*</span></label>
+      <select name="room_id" id="roomSelect" class="form-select" required>
+        <option value="">-- Chọn phòng --</option>
+        {% for r in rooms %}
+        <option value="{{ r['id'] }}" data-name="{{ r['name'] }} (sức chứa {{ r['capacity'] }})"
+                {% if form.get('room_id')|string == r['id']|string %}selected{% endif %}>
+          {{ r['name'] }} (sức chứa {{ r['capacity'] }})
+        </option>
+        {% endfor %}
+      </select>
+      <div class="form-text" id="roomHint">Chọn thời gian bắt đầu/kết thúc để hệ thống tự lọc phòng còn trống.</div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Thời gian bắt đầu <span class="text-danger">*</span></label>
+        <input type="datetime-local" id="startInput" name="start_time" class="form-control"
+               value="{{ form.get('start_time','') }}" required>
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Thời gian kết thúc <span class="text-danger">*</span></label>
+        <input type="datetime-local" id="endInput" name="end_time" class="form-control"
+               value="{{ form.get('end_time','') }}" required>
+      </div>
+    </div>
+    
+    <div class="mb-3">
+      <label class="form-label">Người tham gia</label>
+      <div class="tag-input-wrap">
+        <div class="tag-list" id="tagList">
+          <input type="text" class="tag-search-input" id="tagSearchInput" placeholder="Hãy nhập tên hoặc Email để tìm...">
+        </div>
+        <div class="tag-suggestions" id="tagSuggestions"></div>
+      </div>
+      <div id="participantsHidden"></div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Nội dung cuộc họp</label>
+      <textarea name="description" maxlength="1000" rows="3" class="form-control">{{ form.get('description','') }}</textarea>
+    </div>
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary">{{ 'Lưu thay đổi' if mode == 'edit' else 'Xác nhận tạo' }}</button>
+      <button type="button" class="btn btn-secondary" id="cancelBtn">Hủy bỏ</button>
+    </div>
+  </form>
+</div>
+
+<script>
+const ALL_EMPLOYEES = {{ employees_json | tojson }};
+const INITIAL_SELECTED = {{ participant_ids | tojson }};
+const EXCLUDE_MEETING_ID = {{ meeting['id'] if meeting else 'null' }};
+
+let selected = []; // list of {id, name, busy}
+
+const tagList = document.getElementById('tagList');
+const tagSearchInput = document.getElementById('tagSearchInput');
+const tagSuggestions = document.getElementById('tagSuggestions');
+const participantsHidden = document.getElementById('participantsHidden');
+const titleInput = document.getElementById('titleInput');
+const titleCounter = document.getElementById('titleCounter');
+const startInput = document.getElementById('startInput');
+const endInput = document.getElementById('endInput');
+const roomSelect = document.getElementById('roomSelect');
+const roomHint = document.getElementById('roomHint');
+const form = document.getElementById('meetingForm');
+const cancelBtn = document.getElementById('cancelBtn');
+
+function updateTitleCounter() {
+  const len = titleInput.value.length;
+  titleCounter.textContent = len + ' / 200 ký tự';
+  titleCounter.classList.toggle('limit-near', len > 180);
+}
+titleInput.addEventListener('input', updateTitleCounter);
+updateTitleCounter();
+
+function renderTags() {
+  tagList.querySelectorAll('.tag-chip').forEach(el => el.remove());
+  participantsHidden.innerHTML = '';
+  selected.forEach(p => {
+    const chip = document.createElement('span');
+    chip.className = 'tag-chip' + (p.busy ? ' busy' : '');
+    chip.innerHTML = (p.busy ? '⚠️ ' : '') + p.name + ' <span class="remove" data-id="' + p.id + '">&times;</span>';
+    tagList.insertBefore(chip, tagSearchInput);
+    const hidden = document.createElement('input');
+    hidden.type = 'hidden';
+    hidden.name = 'participants';
+    hidden.value = p.id;
+    participantsHidden.appendChild(hidden);
+  });
+  tagList.querySelectorAll('.remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      selected = selected.filter(p => p.id != btn.dataset.id);
+      renderTags();
+      checkAvailability();
+    });
+  });
+}
+
+function addParticipant(emp) {
+  if (selected.some(p => p.id == emp.id)) return;
+  selected.push({id: emp.id, name: emp.name, busy: false});
+  tagSearchInput.value = '';
+  tagSuggestions.style.display = 'none';
+  renderTags();
+  checkAvailability();
+}
+
+tagSearchInput.addEventListener('input', () => {
+  const q = tagSearchInput.value.trim().toLowerCase();
+  tagSuggestions.innerHTML = '';
+  if (!q) { tagSuggestions.style.display = 'none'; return; }
+  const matches = ALL_EMPLOYEES.filter(e =>
+    !selected.some(p => p.id == e.id) &&
+    (e.name.toLowerCase().includes(q) || e.email.toLowerCase().includes(q))
+  );
+  if (!matches.length) { tagSuggestions.style.display = 'none'; return; }
+  matches.forEach(e => {
+    const item = document.createElement('div');
+    item.className = 'tag-suggestion-item';
+    item.textContent = e.name + ' (' + e.email + ')';
+    item.addEventListener('click', () => addParticipant(e));
+    tagSuggestions.appendChild(item);
+  });
+  tagSuggestions.style.display = 'block';
+});
+document.addEventListener('click', (e) => {
+  if (!tagSuggestions.contains(e.target) && e.target !== tagSearchInput) {
+    tagSuggestions.style.display = 'none';
+  }
+});
+
+// Preload initial selection (edit mode / validation re-render)
+INITIAL_SELECTED.forEach(idStr => {
+  const emp = ALL_EMPLOYEES.find(e => String(e.id) === String(idStr));
+  if (emp) selected.push({id: emp.id, name: emp.name, busy: false});
+});
+renderTags();
+
+function checkAvailability() {
+  const start = startInput.value;
+  const end = endInput.value;
+  if (!start || !end) return;
+  const params = new URLSearchParams({start, end});
+  if (EXCLUDE_MEETING_ID) params.set('exclude_meeting_id', EXCLUDE_MEETING_ID);
+  if (selected.length) params.set('participant_ids', selected.map(p => p.id).join(','));
+
+  fetch('/api/availability?' + params.toString())
+    .then(r => r.json())
+    .then(data => {
+      // Lọc phòng: chỉ hiển thị phòng còn trống (giữ lại phòng đang chọn nếu có)
+      const currentVal = roomSelect.value;
+      let currentStillAvailable = false;
+      Array.from(roomSelect.options).forEach(opt => {
+        if (!opt.value) { opt.hidden = false; return; }
+        const avail = data.available_room_ids.includes(parseInt(opt.value));
+        opt.hidden = !avail;
+        if (opt.value === currentVal && avail) currentStillAvailable = true;
+      });
+      if (currentVal && !currentStillAvailable) {
+        roomSelect.value = '';
+        roomHint.textContent = 'Phòng đã chọn không còn trống trong khung giờ này — vui lòng chọn phòng khác.';
+        roomHint.classList.add('text-danger');
+      } else {
+        roomHint.textContent = 'Danh sách phòng đã được lọc theo thời gian bạn chọn (chỉ hiện phòng còn trống).';
+        roomHint.classList.remove('text-danger');
+      }
+      // Đánh dấu người tham gia đang bận
+      selected.forEach(p => { p.busy = data.busy_participant_ids.includes(p.id); });
+      renderTags();
+    });
+}
+startInput.addEventListener('change', checkAvailability);
+endInput.addEventListener('change', checkAvailability);
+if (startInput.value && endInput.value) checkAvailability();
+
+// Hủy bỏ: hỏi xác nhận nếu form đã có dữ liệu
+cancelBtn.addEventListener('click', () => {
+  const dirty = titleInput.value.trim() !== '' || selected.length > 0 ||
+                document.querySelector('textarea[name=description]').value.trim() !== '';
+  if (dirty && !confirm('Bạn có chắc muốn hủy? Thông tin đang nhập sẽ không được lưu.')) {
+    return;
+  }
+  window.location.href = "{{ url_for('meeting_list') }}";
+});
+</script>
+{% endblock %}

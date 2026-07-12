@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Quản lý phòng họp{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">Quản lý phòng họp</h4>
+  <a href="{{ url_for('manager_room_new') }}" class="btn btn-primary btn-sm">+ Thêm phòng họp</a>
+</div>
+
+<div class="row g-3">
+  {% for item in rooms_data %}
+  {% set r = item.room %}
+  <div class="col-md-4">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between align-items-start">
+        <h6 class="mb-1">{{ r['name'] }}</h6>
+        {% if r['status'] == 'maintenance' %}
+          <span class="badge badge-past">Bảo trì</span>
+        {% elif item.in_use %}
+          <span class="badge badge-cancelled">Đang sử dụng</span>
+        {% else %}
+          <span class="badge badge-active">Trống</span>
+        {% endif %}
+      </div>
+      <div class="text-muted small">Sức chứa: {{ r['capacity'] }} người</div>
+      <div class="text-muted small mb-2">Thiết bị: {{ r['equipment'] }}</div>
+      <div class="text-muted small mb-2">Tổng giờ đã sử dụng: <strong>{{ item.total_hours }} giờ</strong></div>
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('manager_room_history', room_id=r['id']) }}" class="btn btn-sm btn-outline-primary">Lịch sử</a>
+        <a href="{{ url_for('manager_room_edit', room_id=r['id']) }}" class="btn btn-sm btn-outline-secondary">Sửa</a>
+        <form method="post" action="{{ url_for('manager_room_delete', room_id=r['id']) }}"
+              onsubmit="return confirm('Xóa phòng {{ r['name'] }}? Thao tác này không thể hoàn tác.');">
+          <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <p class="text-muted">Chưa có phòng họp nào.</p>
+  {% endfor %}
+</div>
+{% endblock %}

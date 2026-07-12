@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Dashboard thống kê{% endblock %}
+{% block content %}
+<style>
+  .stat-card { background:#fff; border-radius:10px; padding:18px; box-shadow:0 1px 4px rgba(0,0,0,.08); }
+  .stat-num { font-size:1.8rem; font-weight:700; color:var(--brand); }
+  .stat-label { font-size:.82rem; color:#8a94a3; }
+  .bar-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .bar-label { width:110px; font-size:.85rem; color:#4a5568; flex-shrink:0; }
+  .bar-track { flex:1; background:#eef1f4; border-radius:6px; height:18px; overflow:hidden; }
+  .bar-fill { background:var(--brand); height:100%; border-radius:6px; }
+  .bar-value { width:70px; text-align:right; font-size:.82rem; color:#4a5568; flex-shrink:0; }
+</style>
+
+<h4 class="mb-3">Dashboard thống kê – Tháng {{ month_label }}</h4>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="stat-num">{{ meetings_this_month }}</div>
+      <div class="stat-label">Cuộc họp trong tháng {{ month_label }}</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="stat-num">{{ total_meetings }}</div>
+      <div class="stat-label">Tổng số cuộc họp (toàn hệ thống)</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="stat-num">{{ cancelled_meetings }}</div>
+      <div class="stat-label">Cuộc họp đã hủy</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="stat-num">{{ total_accounts }}</div>
+      <div class="stat-label">Tài khoản ({{ locked_accounts }} đang bị khóa)</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-md-6">
+    <div class="stat-card">
+      <h6 class="mb-3">🏠 Hiệu suất sử dụng phòng (tháng {{ month_label }})</h6>
+      {% for r in room_usage %}
+      <div class="bar-row">
+        <div class="bar-label">{{ r['name'] }}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:{{ (r['hours']/max_hours*100)|round(1) }}%"></div></div>
+        <div class="bar-value">{{ r['hours']|round(1) }} giờ</div>
+      </div>
+      {% else %}
+      <p class="text-muted small">Chưa có dữ liệu.</p>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="stat-card">
+      <h6 class="mb-3">👤 Người tổ chức nhiều cuộc họp nhất (tháng {{ month_label }})</h6>
+      <table class="table table-sm mb-0">
+        <thead><tr><th>Nhân viên</th><th class="text-end">Số cuộc họp</th></tr></thead>
+        <tbody>
+        {% for o in top_organizers %}
+          <tr><td>{{ o['name'] }}</td><td class="text-end">{{ o['meeting_count'] }}</td></tr>
+        {% else %}
+          <tr><td colspan="2" class="text-muted small">Chưa có dữ liệu.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Phòng họp{% endblock %}
+{% block content %}
+<h4 class="mb-3">Phòng họp</h4>
+<div class="row g-3">
+  {% for r in rooms %}
+  <div class="col-md-4">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between align-items-start">
+        <h6 class="mb-1">{{ r['name'] }}</h6>
+        {% if r['status'] == 'active' %}
+          <span class="badge badge-active">Đang hoạt động</span>
+        {% else %}
+          <span class="badge badge-past">Bảo trì</span>
+        {% endif %}
+      </div>
+      <div class="text-muted small">Sức chứa: {{ r['capacity'] }} người</div>
+      <div class="text-muted small">Thiết bị: {{ r['equipment'] }}</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Thông báo{% endblock %}
+{% block content %}
+<h4 class="mb-3">Thông báo</h4>
+<div class="list-group">
+  {% for n in notifications %}
+  <div class="list-group-item {{ 'bg-light' if not n['is_read'] else '' }}">
+    <div class="d-flex justify-content-between">
+      <div>{{ n['message'] }}</div>
+      {% if not n['is_read'] %}<span class="badge badge-active ms-2">Mới</span>{% endif %}
+    </div>
+    <div class="text-muted small mt-1">{{ n['created_at'] }}{% if n['meeting_title'] %} · {{ n['meeting_title'] }}{% endif %}</div>
+  </div>
+  {% else %}
+  <div class="card p-4 text-center text-muted">Không có thông báo nào.</div>
+  {% endfor %}
+</div>
+{% endblock %}
