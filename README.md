@@ -9,7 +9,6 @@ Chi tiết hướng dẫn cài đặt, cấu hình GitHub và sử dụng xem tr
 pip install Flask
 python app.py
 ```
-
 Mở trình duyệt tại http://127.0.0.1:5000
 
 ## Công nghệ

@@ -1,5 +1,3 @@
--- HK253_DAMH_Nhom01 - Hệ thống Đặt lịch họp Công ty XYZ
-
 DROP TABLE IF EXISTS meeting_participants;
 DROP TABLE IF EXISTS meetings;
 DROP TABLE IF EXISTS rooms;
