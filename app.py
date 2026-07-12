@@ -15,7 +15,7 @@ GRID_START_HOUR = 7
 GRID_END_HOUR = 19
 ROW_HEIGHT_PX = 50
 
-# Bảng màu sự kiện: cuộc họp do tôi tạo vs được mời
+# Bảng màu sự kiện cuộc họp do tôi tạo với được mời
 COLOR_MINE = {"bg": "#DCEBF9", "border": "#2E75B6", "text": "#14456e"}
 COLOR_INVITED = {"bg": "#FDECD6", "border": "#e08a2e", "text": "#7a4a0e"}
 COLOR_CANCELLED = {"bg": "#f3f3f3", "border": "#AAAAAA", "text": "#888888"}
@@ -80,7 +80,7 @@ def index():
     return redirect(url_for("calendar_view"))
 
 
-# ---------- Đăng nhập (US-01: email + mật khẩu) ----------
+# Đăng nhập (US-01: email + mật khẩu)
 @app.route("/login", methods=["GET", "POST"])
 def login():
     db = get_db()
@@ -132,7 +132,7 @@ def _user_meetings_in_range(db, user_id, start_dt, end_dt):
     return rows
 
 
-# ---------- Lịch họp cá nhân (Ngày / Tuần / Tháng) ----------
+# Lịch họp cá nhân (Ngày / Tuần / Tháng)
 @app.route("/calendar")
 def calendar_view():
     db = get_db()
@@ -219,11 +219,8 @@ def calendar_view():
         current_month=ref_date.month,
     )
 
-
-# =========================================================================
-# MODULE 2 — QUẢN LÝ PHÒNG HỌP (Meeting Manager)
+# QUẢN LÝ PHÒNG HỌP (Meeting Manager)
 # Quyền truy cập: role = manager hoặc admin
-# =========================================================================
 
 @app.route("/rooms")
 def rooms_view():
@@ -369,11 +366,8 @@ def manager_room_history(room_id):
     ).fetchall()
     return render_template("manager_room_history.html", user=user, room=room, bookings=bookings, now_str=now_str)
 
-
-# =========================================================================
 # MODULE 3 — ADMINISTRATOR
 # Quyền truy cập: role = admin
-# =========================================================================
 
 @app.route("/admin/accounts")
 @require_roles("admin")
@@ -513,7 +507,7 @@ def admin_dashboard():
     )
 
 
-# ---------- Trang tài khoản: xem + cập nhật thông tin cá nhân ----------
+# Mục tài khoản xem và cập nhật thông tin cá nhân
 @app.route("/account")
 def account_view():
     user = current_user()
@@ -577,7 +571,7 @@ def account_change_password():
     return render_template("account_change_password.html", user=user)
 
 
-# ---------- Trang thông báo ----------
+# Mục thông báo
 @app.route("/notifications")
 def notifications_view():
     db = get_db()
@@ -607,7 +601,7 @@ def inject_unread_count():
     return {"unread_notif_count": 0}
 
 
-# ---------- Quản lý cuộc họp (danh sách) ----------
+# Quản lý cuộc họp (danh sách)
 @app.route("/meetings")
 def meeting_list():
     db = get_db()
@@ -631,8 +625,8 @@ def meeting_list():
                             now=datetime.now(), now_str=datetime.now().strftime("%Y-%m-%d %H:%M"))
 
 
-# ---------- API: kiểm tra phòng trống & người tham gia bận theo thời gian ----------
-# (phục vụ UI-2: lọc phòng trống động + cảnh báo ⚠️ người tham gia bận ngay trên form)
+# API kiểm tra phòng trống và người tham gia bận theo thời gian 
+# Lọc phòng trống động và cảnh báo người tham gia bận ngay trên form 
 @app.route("/api/availability")
 def api_availability():
     db = get_db()
@@ -681,7 +675,7 @@ def api_availability():
     })
 
 
-# ---------- Tạo lịch họp mới (US-04) ----------
+# Tạo lịch họp mới (US-04) 
 @app.route("/meetings/new", methods=["GET", "POST"])
 def meeting_new():
     db = get_db()
@@ -784,7 +778,7 @@ def meeting_new():
     )
 
 
-# ---------- Sửa cuộc họp (US-05) ----------
+# Sửa cuộc họp (US-05)
 @app.route("/meetings/<int:meeting_id>/edit", methods=["GET", "POST"])
 def meeting_edit(meeting_id):
     db = get_db()
@@ -872,7 +866,7 @@ def meeting_edit(meeting_id):
     )
 
 
-# ---------- Hủy cuộc họp (US-06) ----------
+# Hủy cuộc họp (US-06)
 @app.route("/meetings/<int:meeting_id>/cancel", methods=["POST"])
 def meeting_cancel(meeting_id):
     db = get_db()
@@ -900,7 +894,7 @@ def meeting_cancel(meeting_id):
     return redirect(url_for("meeting_list"))
 
 
-# ---------- Xác nhận tham gia (US-07) ----------
+# Xác nhận tham gia (US-07)
 @app.route("/meetings/<int:meeting_id>/respond", methods=["POST"])
 def meeting_respond(meeting_id):
     db = get_db()
