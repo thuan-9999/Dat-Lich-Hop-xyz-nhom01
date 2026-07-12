@@ -1,8 +1,7 @@
-# HK253_DAMH_Nhom01 – Module Nhân viên: Tạo lịch họp mới & Quản lý cuộc họp
+# HK253_DAMH_Nhom01 - Hệ thống Đặt lịch họp Công ty XYZ
 
 Đồ án môn học Nhập môn Công nghệ Phần mềm – Hệ thống Đặt lịch họp Công ty XYZ.
-Chi tiết hướng dẫn cài đặt, cấu hình GitHub và sử dụng xem trong file
-`HK253_DAMH_Nhom01_C4_HDSD.docx`.
+Chi tiết hướng dẫn cài đặt, cấu hình GitHub và sử dụng xem trong file HK253_DAMH_Nhom01_C4_HDSD.docx.
 
 ## Chạy nhanh
 

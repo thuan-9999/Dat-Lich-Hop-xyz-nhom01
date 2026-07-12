@@ -1,6 +1,4 @@
 -- HK253_DAMH_Nhom01 - Hệ thống Đặt lịch họp Công ty XYZ
--- Module: Nhân viên (Tạo lịch họp mới & Quản lý cuộc họp) + phần làm thêm:
--- Quản lý phòng họp (Meeting Manager) & Administrator
 
 DROP TABLE IF EXISTS meeting_participants;
 DROP TABLE IF EXISTS meetings;
